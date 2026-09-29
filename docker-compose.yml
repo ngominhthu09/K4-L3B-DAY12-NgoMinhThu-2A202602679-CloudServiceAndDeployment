@@ -6,7 +6,7 @@
 #
 # NHIỆM VỤ: bổ sung service `agent`. Yêu cầu:
 #   [ ] build từ Dockerfile trong thư mục hiện tại
-#   [ ] map cổng ra ngoài (8000:8000)
+#   [ ] map cổng ra ngoài (dải 8000–8002 cho tối đa 3 instance)
 #   [ ] KHÔNG viết secret thẳng vào file này — dùng nội suy biến môi trường
 #       `${AGENT_API_KEY}` (docker compose tự đọc từ file .env cùng thư mục)
 #   [ ] REDIS_URL trỏ tới `redis://redis:6379/0` — trong compose, tên service
@@ -38,7 +38,9 @@ services:
   agent:
     build: .
     ports:
-      - "8000:8000"
+      # Mỗi replica lấy một cổng host riêng, cùng nghe cổng 8000 bên trong.
+      - "8000-8002:8000"
+    stop_grace_period: 30s
     depends_on:
       - redis
     environment:

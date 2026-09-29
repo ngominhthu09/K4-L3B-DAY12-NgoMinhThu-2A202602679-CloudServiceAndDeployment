@@ -56,11 +56,17 @@ def get_cost_guard() -> CostGuard:
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    """CHO SẴN — chạy lúc app khởi động và lúc tắt."""
+    """Đăng ký xử lý signal lúc khởi động, hoàn trả handler khi app dừng."""
     get_settings()
-    log_event("service_started", service=SERVICE_NAME, version=SERVICE_VERSION)
-    yield
-    log_event("service_stopped", service=SERVICE_NAME)
+    lifecycle.shutting_down = False
+    lifecycle.install()
+    try:
+        log_event("service_started", service=SERVICE_NAME, version=SERVICE_VERSION)
+        yield
+    finally:
+        lifecycle.shutting_down = True
+        lifecycle.restore()
+        log_event("service_stopped", service=SERVICE_NAME)
 
 
 app = FastAPI(title="Day 12 Production Agent", version=SERVICE_VERSION, lifespan=lifespan)
@@ -77,7 +83,7 @@ class AskRequest(BaseModel):
 def health():
     """Liveness probe — process còn sống không?
 
-    TODO (CP1 + CP4):
+    Trạng thái trả về:
       - Đang tắt dần (``lifecycle.shutting_down``) → trả
         ``JSONResponse(status_code=503, content={"status": "shutting_down"})``
       - Bình thường → ``{"status": "ok", "service": SERVICE_NAME,
@@ -96,7 +102,7 @@ def health():
 def ready(store: ConversationStore = Depends(get_store)):
     """Readiness probe — đã sẵn sàng nhận traffic chưa?
 
-    TODO (CP4):
+    Trạng thái trả về:
       - Đang tắt dần → 503 ``{"status": "shutting_down"}``
       - ``store.ping()`` False → 503 ``{"status": "not ready", "redis": False}``
       - Ngược lại → ``{"status": "ready", "redis": True}``
@@ -104,7 +110,13 @@ def ready(store: ConversationStore = Depends(get_store)):
     Khác /health ở chỗ: endpoint này ĐƯỢC PHÉP kiểm tra dependency. Load
     balancer dùng nó để quyết định có đẩy request vào instance này không.
     """
-    raise NotImplementedError("TODO (CP4): cài đặt /ready")
+    if lifecycle.shutting_down:
+        return JSONResponse(status_code=503, content={"status": "shutting_down"})
+    if not store.ping():
+        return JSONResponse(
+            status_code=503, content={"status": "not ready", "redis": False}
+        )
+    return {"status": "ready", "redis": True}
 
 
 # ─────────────────────────────────────────────────────────────
