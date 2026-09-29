@@ -6,14 +6,15 @@
 > **Chỉ ghi TÊN biến môi trường, tuyệt đối không dán giá trị API key vào đây.**
 > Repo này công khai — dán khóa vào là mất khóa.
 
-**Trạng thái:** đã deploy Railway. Các endpoint chưa được gọi trong quá trình
-thiết lập để học viên tự kiểm chứng. Không ghi API key vào tài liệu này.
+**Trạng thái:** đã deploy thành công trên Railway. Service và Redis đều đang
+Online; các kiểm tra liveness và readiness đã trả về thành công. Không ghi API
+key vào tài liệu này.
 
 ## Thông Tin Học Viên
 
 | Mục | Nội dung |
 |-----|----------|
-| Họ và tên | NgoMinhThu (theo tên repository) |
+| Họ và tên | Ngô Minh Thu |
 | Mã học viên | 2A202602679 |
 | Repo | https://github.com/ngominhthu09/K4-L3B-DAY12-NgoMinhThu-2A202602679-CloudServiceAndDeployment |
 
@@ -73,9 +74,19 @@ done; echo
 
 ## Kết Quả Chạy Thật
 
-Chưa chạy trong quá trình thiết lập theo yêu cầu học viên tự kiểm chứng.
-Chạy các lệnh bên trên với `URL=https://day12-agent-production-f5fb.up.railway.app`
-và thay phần này bằng output thật trước khi nộp.
+Public URL đã kiểm tra: `https://day12-agent-production-f5fb.up.railway.app`
+
+| Kiểm tra | Kết quả |
+|----------|---------|
+| `GET /health` | `200 OK` |
+| `GET /ready` | `200 OK` |
+| Railway service | `Online` |
+| Railway Redis | `Online` |
+
+Minh chứng cho hai endpoint nằm trong `screenshots/health.png`; ảnh dashboard
+và build log nằm trong `screenshots/dashboard.png`. Các lệnh `/ask` dùng API
+key vẫn được giữ ở phần lệnh kiểm tra để chạy lại an toàn với key cục bộ, không
+ghi secret vào repository.
 
 ## Ảnh Chụp Màn Hình
 
